@@ -5,7 +5,7 @@ import { GlobalStyle } from './GlobalStyle';
 import { fetchImg } from '../services/imgApi';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
-import Button from './Button';
+import ButtonLoadMore from './Button';
 import Loader from './Loader';
 import Modal from './Modal';
 
@@ -33,19 +33,26 @@ export class App extends Component {
       totalImg: list.totalHits,
       loader: false,
     });
+
+    setTimeout(() => {
+      window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+    }, 0);
   };
 
   onLoad = async () => {
-    this.setState(state => ({ page: (state.page += 1), loader: true }));
+    await this.setState(state => ({ page: (state.page += 1), loader: true }));
 
     const { name, page } = this.state;
     const resp = await fetchImg(name, page);
-    console.log(resp);
 
     this.setState(state => ({
       imgList: [...state.imgList, ...resp.hits],
       loader: false,
     }));
+
+    setTimeout(() => {
+      window.scrollBy({ top: window.innerHeight - 260, behavior: 'smooth' });
+    }, 0);
   };
 
   toggleModal = () => {
@@ -69,7 +76,9 @@ export class App extends Component {
           <Loader />
         ) : (
           page &&
-          imgList.length !== totalImg && <Button onClick={this.onLoad} />
+          imgList.length !== totalImg && (
+            <ButtonLoadMore onClick={this.onLoad} />
+          )
         )}
 
         {showModal && (

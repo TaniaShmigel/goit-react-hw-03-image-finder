@@ -14,3 +14,6 @@ export async function fetchImg(name, page) {
     return error;
   }
 }
+
+
+
