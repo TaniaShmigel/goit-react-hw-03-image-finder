@@ -26,33 +26,26 @@ export class App extends Component {
     const { name, page } = this.state;
 
     if (prevState.name !== name || prevState.page !== page) {
-      this.setState({ loader: true, showBtn: true });
-      const list = await fetchImg(name, page);
-
-      this.setState(state => ({
+      this.setState({ loader: true,});
+      try {const list = await fetchImg(name, page);
+           this.setState(state => ({
         imgList: [...state.imgList, ...list.hits],
-        totalImg: list.totalHits,
-        loader: false,
-      }));
+        showBtn:page < Math.ceil(list.totalHits / 12)
+      }));}
+      catch(){}
+      finaly{ this.setState({ loader: false,});}
+      
+
+     
     }
 
-    if (prevState.name !== name) {
-      const list = await fetchImg(name, page);
-      this.setState({
-        imgList: [...list.hits],
-      });
-    }
 
-    const totalPages = Math.ceil(this.totalImg / 12);
-    if (page === totalPages && page > 1) {
-      this.setState({
-        showBtn: false,
-      });
-    }
+
+    
   }
 
   searchQuery = name => {
-    this.setState({ name });
+    this.setState({ name, page: 1 , imgList: [] });
   };
 
   onLoad = () => {
@@ -118,14 +111,10 @@ export class App extends Component {
         <GlobalStyle />
         <Searchbar onSubmit={this.searchQuery} />
         <ImageGallery list={imgList} onClick={this.onClickImg} />
-        {loader ? (
-          <Loader />
-        ) : (
-          page &&
-          imgList.length !== totalImg &&
-          showBtn && <Button onClick={this.onLoad} />
-        )}
-
+        {loader &&
+          <Loader />}
+        
+        {  showBtn && <Button onClick={this.onLoad} />}
         {showModal && (
           <Modal onShow={this.toggleModal}>
             <img src={largeImg} alt={tag} />
