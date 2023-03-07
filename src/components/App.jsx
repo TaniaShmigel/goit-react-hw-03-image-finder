@@ -30,8 +30,7 @@ export class App extends Component {
       try {const list = await fetchImg(name, page);
            this.setState(state => ({
         imgList: [...state.imgList, ...list.hits],
-        totalImg: list.totalHits,
-        showBtn:page < Math.ceil(this.totalImg / 12)
+        showBtn:page < Math.ceil(list.totalHits / 12)
       }));}
       catch(){}
       finaly{ this.setState({ loader: false,});}
