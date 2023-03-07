@@ -5,55 +5,93 @@ import { GlobalStyle } from './GlobalStyle';
 import { fetchImg } from '../services/imgApi';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
-import ButtonLoadMore from './Button';
+import Button from './Button';
 import Loader from './Loader';
 import Modal from './Modal';
 
 export class App extends Component {
   state = {
     imgList: [],
-    page: null,
+    page: 1,
     name: '',
     totalImg: null,
     loader: false,
     showModal: false,
+    showBtn: false,
     largeImg: '',
     tag: '',
   };
 
-  searchQuery = async (name, page = 1) => {
-    this.setState({ loader: true });
-
-    const list = await fetchImg(name, page);
-
-    this.setState({
-      imgList: list.hits,
-      name: name,
-      page: page,
-      totalImg: list.totalHits,
-      loader: false,
-    });
-
-    setTimeout(() => {
-      window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
-    }, 0);
-  };
-
-  onLoad = async () => {
-    await this.setState(state => ({ page: (state.page += 1), loader: true }));
-
+  async componentDidUpdate(_, prevState) {
     const { name, page } = this.state;
-    const resp = await fetchImg(name, page);
 
-    this.setState(state => ({
-      imgList: [...state.imgList, ...resp.hits],
-      loader: false,
-    }));
+    if (prevState.name !== name || prevState.page !== page) {
+      this.setState({ loader: true, showBtn: true });
+      const list = await fetchImg(name, page);
 
-    setTimeout(() => {
-      window.scrollBy({ top: window.innerHeight - 260, behavior: 'smooth' });
-    }, 0);
+      this.setState(state => ({
+        imgList: [...state.imgList, ...list.hits],
+        totalImg: list.totalHits,
+        loader: false,
+      }));
+    }
+
+    if (prevState.name !== name) {
+      const list = await fetchImg(name, page);
+      this.setState({
+        imgList: [...list.hits],
+      });
+    }
+
+    const totalPages = Math.ceil(this.totalImg / 12);
+    if (page === totalPages && page > 1) {
+      this.setState({
+        showBtn: false,
+      });
+    }
+  }
+
+  searchQuery = name => {
+    this.setState({ name });
   };
+
+  onLoad = () => {
+    this.setState(state => ({ page: state.page + 1 }));
+  };
+
+  // searchQuery = async (name, page = 1) => {
+  //   this.setState({ loader: true });
+
+  //   const list = await fetchImg(name, page);
+
+  //   this.setState({
+  //     imgList: list.hits,
+  //     name: name,
+  //     page: page,
+  //     totalImg: list.totalHits,
+  //     loader: false,
+  //   });
+
+  //   setTimeout(() => {
+  //     window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+  //   }, 0);
+  // };
+
+  // onLoad = async () => {
+  //   await this.setState(state => ({ page: (state.page += 1), loader: true }));
+
+  //   const { name, page } = this.state;
+  //   const resp = await fetchImg(name, 1);
+
+  //   this.setState(state => ({
+  //     imgList: [...state.imgList, ...resp.hits],
+  //     loader: false,
+  //   }));
+
+  //   setTimeout(() => {
+  //     window.scrollBy({ top: window.innerHeight - 260, behavior: 'smooth' });
+  //   }, 0);
+  // };
 
   toggleModal = () => {
     this.setState(({ showModal }) => ({ showModal: !showModal }));
@@ -65,8 +103,16 @@ export class App extends Component {
   };
 
   render() {
-    const { imgList, page, totalImg, loader, showModal, largeImg, tag } =
-      this.state;
+    const {
+      imgList,
+      page,
+      totalImg,
+      loader,
+      showModal,
+      showBtn,
+      largeImg,
+      tag,
+    } = this.state;
     return (
       <Container>
         <GlobalStyle />
@@ -76,9 +122,8 @@ export class App extends Component {
           <Loader />
         ) : (
           page &&
-          imgList.length !== totalImg && (
-            <ButtonLoadMore onClick={this.onLoad} />
-          )
+          imgList.length !== totalImg &&
+          showBtn && <Button onClick={this.onLoad} />
         )}
 
         {showModal && (
