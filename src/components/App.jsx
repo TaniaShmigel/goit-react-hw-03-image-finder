@@ -27,71 +27,28 @@ export class App extends Component {
 
     if (prevState.name !== name || prevState.page !== page) {
       this.setState({ loader: true, showBtn: true });
-      const list = await fetchImg(name, page);
 
-      this.setState(state => ({
-        imgList: [...state.imgList, ...list.hits],
-        totalImg: list.totalHits,
-        loader: false,
-      }));
-    }
+      try {
+        const list = await fetchImg(name, page);
 
-    if (prevState.name !== name) {
-      const list = await fetchImg(name, page);
-      this.setState({
-        imgList: [...list.hits],
-      });
-    }
-
-    const totalPages = Math.ceil(this.totalImg / 12);
-    if (page === totalPages && page > 1) {
-      this.setState({
-        showBtn: false,
-      });
+        this.setState(state => ({
+          imgList: [...state.imgList, ...list.hits],
+          showBtn: page < Math.ceil(list.totalHits / 12),
+        }));
+      } catch (error) {
+        return error;
+      } finally {
+        this.setState({ loader: false });
+      }
     }
   }
-
   searchQuery = name => {
-    this.setState({ name });
+    this.setState({ name, page: 1, imgList: [] });
   };
 
   onLoad = () => {
     this.setState(state => ({ page: state.page + 1 }));
   };
-
-  // searchQuery = async (name, page = 1) => {
-  //   this.setState({ loader: true });
-
-  //   const list = await fetchImg(name, page);
-
-  //   this.setState({
-  //     imgList: list.hits,
-  //     name: name,
-  //     page: page,
-  //     totalImg: list.totalHits,
-  //     loader: false,
-  //   });
-
-  //   setTimeout(() => {
-  //     window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
-  //   }, 0);
-  // };
-
-  // onLoad = async () => {
-  //   await this.setState(state => ({ page: (state.page += 1), loader: true }));
-
-  //   const { name, page } = this.state;
-  //   const resp = await fetchImg(name, 1);
-
-  //   this.setState(state => ({
-  //     imgList: [...state.imgList, ...resp.hits],
-  //     loader: false,
-  //   }));
-
-  //   setTimeout(() => {
-  //     window.scrollBy({ top: window.innerHeight - 260, behavior: 'smooth' });
-  //   }, 0);
-  // };
 
   toggleModal = () => {
     this.setState(({ showModal }) => ({ showModal: !showModal }));
@@ -105,8 +62,7 @@ export class App extends Component {
   render() {
     const {
       imgList,
-      page,
-      totalImg,
+
       loader,
       showModal,
       showBtn,
@@ -118,13 +74,9 @@ export class App extends Component {
         <GlobalStyle />
         <Searchbar onSubmit={this.searchQuery} />
         <ImageGallery list={imgList} onClick={this.onClickImg} />
-        {loader ? (
-          <Loader />
-        ) : (
-          page &&
-          imgList.length !== totalImg &&
-          showBtn && <Button onClick={this.onLoad} />
-        )}
+        {loader && <Loader />}
+
+        {showBtn && <Button onClick={this.onLoad} />}
 
         {showModal && (
           <Modal onShow={this.toggleModal}>
