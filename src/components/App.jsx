@@ -26,7 +26,7 @@ export class App extends Component {
     const { name, page } = this.state;
 
     if (prevState.name !== name || prevState.page !== page) {
-      this.setState({ loader: true, showBtn: true });
+      this.setState({ loader: true });
 
       try {
         const list = await fetchImg(name, page);
